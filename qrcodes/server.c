@@ -46,14 +46,14 @@ int main(int argc, char *argv[]) {
 	/* Mark the socket so it will listen for incoming connections */
 	if (listen (servSock, MAXPENDING) < 0)
 		DieWithError("listen() failed");
-		exit(1)
+		exit(1);
 	for (;;) /* Run forever */
 	{
 		/* Set the size of the in-out parameter */
 		clntLen = sizeof(echoClntAddr);        /* Wait for a client to connect */
 		if ((clntSock = accept (servSock, (struct sockaddr *) &echoClntAddr, &clntLen)) < 0)
 			DieWithError("accept() failed");
-			exit(1)
+			exit(1);
 
 		/* clntSock is connected to a client! */
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
