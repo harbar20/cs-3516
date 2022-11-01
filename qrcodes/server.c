@@ -30,8 +30,8 @@ int main(int argc, char *argv[]) {
 	echoServPort = atoi(argv[1]);        /* First arg:  local port */
 	/* Create socket for incoming connections */
 	if ((servSock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
-		printf("error");
-		// DieWithError("socket() failed");
+		DieWithError("socket() failed");
+		exit(1);
 	/* Construct local address structure */
 	memset(&echoServAddr, 0, sizeof(echoServAddr));         /* Zero out structure */
 	echoServAddr.sin_family         = AF_INET;                      /* Internet address family */
@@ -40,20 +40,20 @@ int main(int argc, char *argv[]) {
 
 	/* Bind to the local address */
 	if (bind (servSock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
-		printf("error");
-		// DieWithError("bind() failed");
+		DieWithError("bind() failed");
+		exit(1);
 
 	/* Mark the socket so it will listen for incoming connections */
 	if (listen (servSock, MAXPENDING) < 0)
-		printf("error");
-		// DieWithError("listen() failed");
+		DieWithError("listen() failed");
+		exit(1)
 	for (;;) /* Run forever */
 	{
 		/* Set the size of the in-out parameter */
 		clntLen = sizeof(echoClntAddr);        /* Wait for a client to connect */
 		if ((clntSock = accept (servSock, (struct sockaddr *) &echoClntAddr, &clntLen)) < 0)
-			printf("error");
-			// DieWithError("accept() failed");
+			DieWithError("accept() failed");
+			exit(1)
 
 		/* clntSock is connected to a client! */
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
