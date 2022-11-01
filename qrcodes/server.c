@@ -5,9 +5,13 @@
 #include <string.h>       /* for memset() */
 #include <unistd.h>      /* for close() */
 
-#define MAXPENDING 5             /* Maximum outstanding connection requests */
-void DieWithError(char *errorMessage);     /* Error handling function */
-void HandleTCPClient(int clntSocket);       /* TCP client handling function */
+// #define MAXPENDING 5             /* Maximum outstanding connection requests */
+void DieWithError(char *errorMessage) {
+	printf("%s", errorMessage);
+};											/* Error handling function */
+void HandleTCPClient(int clntSocket) {
+	//TODO: QR Code decoding here
+};       /* TCP client handling function */
 
 int main(int argc, char *argv[]) {
 
