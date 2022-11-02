@@ -10,6 +10,7 @@
 void DieWithError(char *errorMessage)
 {
 	printf("%s", errorMessage);
+	exit(1);
 }; /* Error handling function */
 void commandRunError(char *argv[])
 {
