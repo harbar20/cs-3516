@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 	/* Create a reliable, stream socket using TCP */
 	if ((sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 		DieWithError("socket() failed");
-
+		exit(1);
 	/* Construct the server address structure */
 	memset(&echoServAddr, 0, sizeof(echoServAddr));        /* Zero out structure */
 	echoServAddr.sin_family         = AF_INET;                     /* Internet address family */
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 	/* Send the string to the server */
 	if (send (sock, echoString, echoStringLen, 0) != echoStringLen)
 		DieWithError("send() sent a different number of bytes than expected");
-
+		exit(1);
 	/* Receive the same string back from the server */
 	totalBytesRcvd = 0;	      /* Count of total bytes received     */
 	printf("Received: ");                /* Setup to print the echoed string */   while (totalBytesRcvd < echoStringLen)
@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
 		   a null terminator) bytes from the sender */
 		if ((bytesRcvd = recv (sock, echoBuffer, RCVBUFSIZE - 1, 0)) <= 0)
 			DieWithError("recv() failed or connection closed prematurely");
+			exit(1);
 
 		totalBytesRcvd += bytesRcvd;   /* Keep tally of total bytes */
 		echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */
