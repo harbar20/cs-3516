@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 	fPtr = fopen("log.txt", "w");
 	fputs("Initializing Server...", fPtr);
 
-	if (argc != 2)     /* Test for correct number of arguments */
+	if (argc > 10 && argc < 1)     /* Test for correct number of arguments */
 	{
 		fprintf(stderr, "Usage:  %s <Server Port>\n", argv[0]);
 		exit(1);
