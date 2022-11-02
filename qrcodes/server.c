@@ -21,6 +21,10 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in echoClntAddr; /* Client address */
 	unsigned short echoServPort;        /* Server port */
 	unsigned int clntLen;                     /* Length of client address data structure */
+	FILE * fPtr = NULL;
+
+	fPtr = fopen("log.txt", "w");
+	fputs("Initializing Server...", fPtr);
 
 	if (argc != 2)     /* Test for correct number of arguments */
 	{
@@ -47,6 +51,8 @@ int main(int argc, char *argv[]) {
 	if (listen (servSock, MAXPENDING) < 0)
 		DieWithError("listen() failed");
 		exit(1);
+	fputs("Server Initialized", fPtr);
+	fclose(fPtr);
 	for (;;) /* Run forever */
 	{
 		/* Set the size of the in-out parameter */
