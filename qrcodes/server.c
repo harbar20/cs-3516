@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	unsigned short TIME_OUT = 80;
 	FILE * fPtr;
 	fPtr = fopen("log.txt", "w");
-	fputs("Server intializing...", fPtr);
+	fputs("Server intializing...\n", fPtr);
 
 	unsigned int clntLen; /* Length of client address data structure */
 
@@ -113,8 +113,10 @@ int main(int argc, char *argv[])
 	/* Mark the socket so it will listen for incoming connections */
 	if (listen(servSock, MAX_USERS) < 0)
 		DieWithError("listen() failed");
-	fputs("Server intialized", fPtr);
-	fclose(fPtr)
+		
+	fputs("Server intialized\n", fPtr);
+	fclose(fPtr);
+
 	for (;;) /* Run forever */
 	{
 		/* Set the size of the in-out parameter */
