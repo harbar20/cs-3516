@@ -10,6 +10,7 @@
 void DieWithError(char *errorMessage)
 {
 	printf("%s", errorMessage);
+	exit(1)
 }; /* Error handling function */
 void commandRunError(char *argv[])
 {
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
 	unsigned short RATE_NUMBER_SECONDS = 60; /* Time limit for rate limit */
 	unsigned short MAX_USERS = 3;
 	unsigned short TIME_OUT = 80;
-	FILE * fPtr;
+	FILE *fPtr;
 	fPtr = fopen("log.txt", "w");
 	fputs("Server intializing...", fPtr);
 
@@ -113,8 +114,7 @@ int main(int argc, char *argv[])
 	if (listen(servSock, MAX_USERS) < 0)
 		DieWithError("listen() failed");
 	fputs("Server intialized", fPtr);
-	fclose(fPtr)
-	for (;;) /* Run forever */
+	fclose(fPtr) for (;;) /* Run forever */
 	{
 		/* Set the size of the in-out parameter */
 		clntLen = sizeof(echoClntAddr); /* Wait for a client to connect */
