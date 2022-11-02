@@ -1,1 +1,2 @@
-Server intializing...Server intialized
+Server intializing...
+Server intialized
