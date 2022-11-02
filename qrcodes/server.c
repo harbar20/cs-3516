@@ -23,6 +23,8 @@ void HandleTCPClient(int clntSocket){
 int main(int argc, char *argv[])
 {
 
+	setvbuf(stdout, NULL, _IONBF, 0); /* Forces stdout to be unbuffered, allowing printf's to work. */
+
 	int servSock;					 /*Socket descriptor for server */
 	int clntSock;					 /* Socket descriptor for client */
 	struct sockaddr_in echoServAddr; /* Local address */
@@ -36,7 +38,8 @@ int main(int argc, char *argv[])
 
 	unsigned int clntLen; /* Length of client address data structure */
 
-	if (argc < 1 || argc > 10) /* Test for correct number of arguments */
+	/* TODO: test input options more strictly. */
+	if (argc > 10) /* Test for correct number of arguments */
 	{
 		commandRunError(argv);
 	}
@@ -46,45 +49,53 @@ int main(int argc, char *argv[])
 		switch (option)
 		{
 		case 'p':
-			if (!optarg)
+			if (optarg == NULL)
 			{
+
 				commandRunError(argv);
 			}
-			PORT = optarg;
+			PORT = atoi(optarg);
+			break;
 		case 'r':
 			if (!optarg)
 			{
+
 				commandRunError(argv);
 			}
-			RATE_NUMBER_REQUESTS = optarg;
+			RATE_NUMBER_REQUESTS = atoi(optarg);
 			if (optind < argc && *argv[optind] != '-')
 			{
-				RATE_NUMBER_SECONDS = argv[optind];
+				RATE_NUMBER_SECONDS = atoi(argv[optind]);
 				optind++;
 			}
 			else
 			{
 				commandRunError(argv);
 			}
+			break;
 		case 'm':
 			if (!optarg)
 			{
 				commandRunError(argv);
 			}
-			MAX_USERS = optarg;
+			MAX_USERS = atoi(optarg);
+			break;
 		case 't':
 			if (!optarg)
 			{
 				commandRunError(argv);
 			}
-			TIME_OUT = optarg;
+			TIME_OUT = atoi(optarg);
+			break;
 		}
 	}
 
+	printf("%d %d %d %d %d\n", PORT, RATE_NUMBER_REQUESTS, RATE_NUMBER_SECONDS, MAX_USERS, TIME_OUT); /* TODO remove this. This is just for debugging. */
+
 	/* Create socket for incoming connections */
 	if ((servSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
-		printf("error");
-	DieWithError("socket() failed");
+		DieWithError("socket() failed");
+
 	/* Construct local address structure */
 	memset(&echoServAddr, 0, sizeof(echoServAddr));	  /* Zero out structure */
 	echoServAddr.sin_family = AF_INET;				  /* Internet address family */
@@ -96,7 +107,7 @@ int main(int argc, char *argv[])
 		DieWithError("bind() failed");
 
 	/* Mark the socket so it will listen for incoming connections */
-	if (listen(servSock, MAXPENDING) < 0)
+	if (listen(servSock, MAX_USERS) < 0)
 		DieWithError("listen() failed");
 
 	for (;;) /* Run forever */
