@@ -1,2 +1,3 @@
-client
-server
+qrcodes/client
+qrcodes/server
+.vscode
