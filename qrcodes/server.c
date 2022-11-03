@@ -5,6 +5,8 @@
 #include <string.h>		/* for memset() */
 #include <unistd.h>		/* for close() */
 #include <getopt.h>		/* for getopt() */
+#include <time.h>
+#include <stdbool.h>
 
 // #define MAXPENDING 5             /* Maximum outstanding connection requests */
 void DieWithError(char *errorMessage)
@@ -17,9 +19,51 @@ void commandRunError(char *argv[])
 	fprintf(stderr, "Usage:  %s -p <PORT between 2000-3000> -r <number requests> <number seconds> -m <Max Users> -t <Timeout in Seconds>\n", argv[0]);
 	exit(1);
 }
-void HandleTCPClient(int clntSocket){
+void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr, int strLen, char *buffer, int servSocket)
+{
+	/* Receive the same string back from the server */
+	int bytesRcvd;
+	int totalBytesRcvd = 0; /* Count of total bytes received     */
+	int bufferLen;
+	printf("Received: "); /* Setup to print the echoed string */
+	while (totalBytesRcvd < 5)
+	{
+		/* Receive up to the buffer size (minus 1 to leave space for
+		   a null terminator) bytes from the sender */
+		bufferLen = strlen(buffer) - 1;
+		if ((bytesRcvd = recv(clntSocket, buffer, bufferLen, 0)) <= 0)
+		{
+			printf("%d\n", bytesRcvd);
+			DieWithError("recv() failed or connection closed prematurely");
+			exit(1);
+		}
+
+		totalBytesRcvd += bytesRcvd; /* Keep tally of total bytes */
+		buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
+		printf("%s", buffer);		 /* Print the echo buffer */
+	}
+
+	//send(clntSocket, buffer, strlen(buffer), 0);
+		/* Send the string to the server */
+	if (send(clntSocket, buffer, 6, 0) != 6) {
+		DieWithError("send() sent a different number of bytes than expected");
+		exit(1);
+	} else {
+		printf("Sent: %s", buffer);
+	}
+
 	// TODO: QR Code decoding here
-}; /* TCP client handling function */
+};				/* TCP client handling function */
+char *getTime() /* Gets the current time for logging. */
+{
+	time_t t;
+	time(&t);
+
+	char *finalTime;
+	// snprintf(finalTime, )
+
+	return ctime(&t);
+}
 
 int main(int argc, char *argv[])
 {
@@ -36,17 +80,20 @@ int main(int argc, char *argv[])
 	unsigned short RATE_NUMBER_SECONDS = 60; /* Time limit for rate limit */
 	unsigned short MAX_USERS = 3;
 	unsigned short TIME_OUT = 80;
+	const int MAX_SIZE = 3000; /* Maximum of 3Kb according to http://qrcode.meetheed.com/question7.php  */
+
 	FILE *fPtr;
 	fPtr = fopen("log.txt", "w");
-	fputs("Server intializing...", fPtr);
+	printf("%s", getTime());
+	fputs("Server intializing...\n", fPtr);
 
 	unsigned int clntLen; /* Length of client address data structure */
 
-	/* TODO: test input options more strictly. */
-	if (argc > 10) /* Test for correct number of arguments */
-	{
-		commandRunError(argv);
-	}
+	// /* TODO: test input options more strictly. */
+	// if (argc > 10) /* Test for correct number of arguments */
+	// {
+	// 	commandRunError(argv);
+	// }
 
 	while ((option = getopt(argc, argv, ":p:r:m:t:")) != -1) /* Get the arguments */
 	{
@@ -107,14 +154,18 @@ int main(int argc, char *argv[])
 	echoServAddr.sin_port = htons(PORT);			  /* Local PORT */
 
 	/* Bind to the local address */
+	setsockopt(servSock,SOL_SOCKET,SO_REUSEADDR, &(int){1}, sizeof(int));
 	if (bind(servSock, (struct sockaddr *)&echoServAddr, sizeof(echoServAddr)) < 0)
 		DieWithError("bind() failed");
 
 	/* Mark the socket so it will listen for incoming connections */
 	if (listen(servSock, MAX_USERS) < 0)
 		DieWithError("listen() failed");
-	fputs("Server intialized", fPtr);
-	fclose(fPtr) for (;;) /* Run forever */
+
+	fputs("Server intialized\n", fPtr);
+	fclose(fPtr);
+
+	for (;;) /* Run forever */
 	{
 		/* Set the size of the in-out parameter */
 		clntLen = sizeof(echoClntAddr); /* Wait for a client to connect */
@@ -123,7 +174,8 @@ int main(int argc, char *argv[])
 
 		/* clntSock is connected to a client! */
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
-		HandleTCPClient(clntSock);
+		char buffer[32];
+		HandleTCPClient(clntSock, echoClntAddr, clntLen, buffer, servSock);
 	}
 	/* NOT REACHED */
 }
