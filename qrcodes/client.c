@@ -9,77 +9,77 @@
 
 void DieWithError(char *errorMessage)
 { /* Error handling function */
-	printf("%s", errorMessage);
+	printf("%s\n", errorMessage);
 }
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+	int sock;                                                /* Socket descriptor */
+	struct sockaddr_in echoServAddr;  /* Echo server address */
+	unsigned short echoServPort;              /* Echo server port */
+	char *servIP;                                        /* Server IP address (dotted quad) */
+	char *echoString;                                 /* String to send to echo server */
+	char echoBuffer[RCVBUFSIZE];      /* Buffer for echo string */
+	unsigned int echoStringLen;               /* Length of string to echo */
+	int bytesRcvd, totalBytesRcvd;          /* Bytes read in single recv()                                         						and total bytes read */
 
-	setvbuf(stdout, NULL, _IONBF, 0); /* Forces stdout to be unbuffered, allowing printf's to work. */
-
-	int sock;						 /* Socket descriptor */
-	struct sockaddr_in echoServAddr; /* Echo server address */
-	unsigned short echoServPort;	 /* Echo server port */
-	char *servIP;					 /* Server IP address (dotted quad) */
-	char *echoString;				 /* String to send to echo server */
-	char echoBuffer[RCVBUFSIZE];	 /* Buffer for echo string */
-	unsigned int echoStringLen;		 /* Length of string to echo */
-	int bytesRcvd, totalBytesRcvd;	 /* Bytes read in single recv()                                         						and total bytes read */
-
-	if ((argc < 3) || (argc > 4)) /* Test for correct number of arguments */
+	if ((argc < 3) || (argc > 4))    /* Test for correct number of arguments */
 	{
 		fprintf(stderr, "Usage: %s <Server IP> <Echo Word> [<Echo Port>]\n",
 				argv[0]);
 		exit(1);
-	}
-	servIP = argv[1];	  /* First arg: server IP address (dotted quad) */
-	echoString = argv[2]; /* Second arg: string to echo */
+	}       servIP = argv[1];                /* First arg: server IP address (dotted quad) */
+	echoString = argv[2];         /* Second arg: string to echo */
 
 	if (argc == 4)
-		echoServPort = atoi(argv[3]); /* Use given port, if any */
+		echoServPort = atoi(argv[3]);    /* Use given port, if any */
 	else
-		echoServPort = 7; /* 7 is the well-known port for the echo service */
+		echoServPort = 7;       /* 7 is the well-known port for the echo service */
 
 	/* Create a reliable, stream socket using TCP */
-	if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+	if ((sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0){
 		DieWithError("socket() failed");
 		exit(1);
 	}
 	/* Construct the server address structure */
-	memset(&echoServAddr, 0, sizeof(echoServAddr));	  /* Zero out structure */
-	echoServAddr.sin_family = AF_INET;				  /* Internet address family */
-	echoServAddr.sin_addr.s_addr = inet_addr(servIP); /* Server IP address */
-	echoServAddr.sin_port = htons(echoServPort);	  /* Server port */
+	memset(&echoServAddr, 0, sizeof(echoServAddr));        /* Zero out structure */
+	echoServAddr.sin_family         = AF_INET;                     /* Internet address family */
+	echoServAddr.sin_addr.s_addr = inet_addr(servIP);        /* Server IP address */
+	echoServAddr.sin_port             = htons(echoServPort);   /* Server port */
 	/* Establish the connection to the echo server */
-	if (connect(sock, (struct sockaddr *)&echoServAddr, sizeof(echoServAddr)) < 0) {
-		DieWithError("connect() failed");
-	}		
+	if (connect (sock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)   	DieWithError("connect() failed");
 
-	echoStringLen = strlen(echoString); /* Determine input length */
+	echoStringLen = strlen(echoString);          /* Determine input length */
+	/* Send number of string characters to server */
+	uint16_t networkStringLen =  ntohs(echoStringLen);
+	printf("echstrlen: %d\n", echoStringLen);
+	printf("networkstrlen: %d\n", networkStringLen);
+	if (send (sock, &networkStringLen, sizeof(uint16_t), 0) != sizeof(uint16_t)){
+		DieWithError("send() sent a different number of bytes than expected");
+		exit(1);
+	}
 
 	/* Send the string to the server */
-	if (send(sock, echoString, echoStringLen, 0) != echoStringLen) {
+	if (send (sock, echoString, echoStringLen, 0) != echoStringLen){
 		DieWithError("send() sent a different number of bytes than expected");
 		exit(1);
 	}
 	/* Receive the same string back from the server */
-	totalBytesRcvd = 0;	  /* Count of total bytes received     */
-	printf("Received: "); /* Setup to print the echoed string */
+	totalBytesRcvd = 0;	      /* Count of total bytes received     */
+	printf("Received: ");                /* Setup to print the echoed string */   
 	while (totalBytesRcvd < echoStringLen)
 	{
-		printf("test\n");
 		/* Receive up to the buffer size (minus 1 to leave space for
 		   a null terminator) bytes from the sender */
-		if ((bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE - 1, 0)) <= 0) {
+		if ((bytesRcvd = recv (sock, echoBuffer, RCVBUFSIZE - 1, 0)) <= 0){
 			DieWithError("recv() failed or connection closed prematurely");
 			exit(1);
 		}
-
-		totalBytesRcvd += bytesRcvd;  /* Keep tally of total bytes */
-		echoBuffer[bytesRcvd] = '\0'; /* Terminate the string! */
-		printf("%s", echoBuffer);	  /* Print the echo buffer */
+		totalBytesRcvd += bytesRcvd;   /* Keep tally of total bytes */
+		echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */
+		printf("%s", echoBuffer);      /* Print the echo buffer */
 	}
+	/* send string to be displayed*/
 
-	printf("\n"); /* Print a final linefeed */
-	close(sock);
+	printf("\n");    /* Print a final linefeed */
+	close (sock);
 	exit(0);
 }
