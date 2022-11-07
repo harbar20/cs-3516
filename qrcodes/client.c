@@ -49,10 +49,7 @@ int main(int argc, char *argv[]) {
 
 	echoStringLen = strlen(echoString);          /* Determine input length */
 	/* Send number of string characters to server */
-	uint16_t networkStringLen =  ntohs(echoStringLen);
-	printf("echstrlen: %d\n", echoStringLen);
-	printf("networkstrlen: %d\n", networkStringLen);
-	if (send (sock, &networkStringLen, sizeof(uint16_t), 0) != sizeof(uint16_t)){
+	if (send (sock, &echoStringLen, sizeof(echoStringLen), 0) != sizeof(echoStringLen)) {
 		DieWithError("send() sent a different number of bytes than expected");
 		exit(1);
 	}
@@ -64,8 +61,7 @@ int main(int argc, char *argv[]) {
 	}
 	/* Receive the same string back from the server */
 	totalBytesRcvd = 0;	      /* Count of total bytes received     */
-	printf("Received: ");                /* Setup to print the echoed string */   
-	while (totalBytesRcvd < echoStringLen)
+	printf("Received: ");                /* Setup to print the echoed string */   while (totalBytesRcvd < echoStringLen)
 	{
 		/* Receive up to the buffer size (minus 1 to leave space for
 		   a null terminator) bytes from the sender */

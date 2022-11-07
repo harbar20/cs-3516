@@ -23,69 +23,66 @@ void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 {
 	/* Receive the same string back from the server */
 	char buffer[32];
-	//char finalBuffer[32];
 	int bytesRcvd;
 	int totalBytesRcvd = 0; /* Count of total bytes received     */
 	int bufferLen;
 	uint16_t stringSize;
-	int stringLen;
-	int intBytes = 0;
-	while (intBytes < sizeof(uint16_t)){
-	
-		if((recv(clntSocket, &stringSize, sizeof(uint16_t)-1, 0)) <=0)
-		{
-			DieWithError("Failed to receive string size. recv() failed or connection closed prematurely\n");
-		}
-		intBytes++;
-	}
-	printf("Received strsize: %d\n", stringSize);
-	stringLen = htons(stringSize);
-	printf("Received strlen: %d\n", stringLen);
+
+	// Receiving size of string
+	if ((recv(clntSocket, &stringSize, sizeof(uint16_t), 0)) <= 0)
+		DieWithError("Failed to receive string size. recv() failed or connection closed prematurely");
+
 	printf("Received: "); /* Setup to print the echoed string */
-	while (totalBytesRcvd < stringLen)
+	while (totalBytesRcvd < stringSize)
 	{
 		/* Receive up to the buffer size (minus 1 to leave space for
 		   a null terminator) bytes from the sender */
 		bufferLen = strlen(buffer) - 1;
 		if ((bytesRcvd = recv(clntSocket, buffer, bufferLen, 0)) <= 0)
-		{
-			printf("%d\n", bytesRcvd);
 			DieWithError("recv() failed or connection closed prematurely");
-			exit(1);
-		}
 
 		totalBytesRcvd += bytesRcvd; /* Keep tally of total bytes */
 		buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
-		//finalBuffer[bytesRcvd] = buffer[0];
-		printf("%s", buffer);		 /* Print the echo buffer */
+		printf("%s", buffer); /* Print the echo buffer */
 	}
-	//finalBuffer[totalBytesRcvd] = '\0';
 	printf("\n");
 
-	printf("buffer: %s\n", buffer);
-	printf("stringlen: %d\n", stringLen);
-	//printf("finalbuffer: %s\n", finalBuffer);
-
-	//send(clntSocket, buffer, strlen(buffer), 0);
+	// send(clntSocket, buffer, strlen(buffer), 0);
 	/* Send the string to the server */
-	if (send(clntSocket, buffer, stringLen, 0) != stringLen) {
+	if (send(clntSocket, buffer, stringSize, 0) != stringSize)
 		DieWithError("send() sent a different number of bytes than expected");
-		exit(1);
-	} else {
+	else
 		printf("Sent: %s\n", buffer);
-	}
 
 	// TODO: QR Code decoding here
 };				/* TCP client handling function */
 char *getTime() /* Gets the current time for logging. */
 {
-	time_t t;
-	time(&t);
+	time_t timeNull = time(NULL);
+	struct tm *t = localtime(&timeNull);
 
 	char *finalTime;
-	// snprintf(finalTime, )
+	snprintf(finalTime, 19, "%d-%d-%d %d:%d:%d", t->tm_year + 1900, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
 
-	return ctime(&t);
+	// return ctime(&t);
+	return finalTime;
+}
+
+void adminLog(struct sockaddr_in echoClntAddr)
+{
+	printf("Initializing fptr\n");
+	FILE *f;
+	printf("Initialized fptr\n");
+	f = fopen("log.txt", "a");
+	printf("Opened fptr\n");
+	char *time = getTime();
+	printf("Got time\n");
+	char *ip = inet_ntoa(echoClntAddr.sin_addr);
+	printf("Got IP\n");
+	fprintf(f, "%s %s", time, ip);
+	printf("Printed to fptr\n");
+	fclose(f);
+	printf("Closed fptr\n");
 }
 
 int main(int argc, char *argv[])
@@ -107,7 +104,6 @@ int main(int argc, char *argv[])
 
 	FILE *fPtr;
 	fPtr = fopen("log.txt", "w");
-	printf("%s", getTime());
 	fputs("Server intializing...\n", fPtr);
 
 	unsigned int clntLen; /* Length of client address data structure */
@@ -122,50 +118,47 @@ int main(int argc, char *argv[])
 	{
 		switch (option)
 		{
-			case 'p':
-				if (optarg == NULL)
-				{
+		case 'p':
+			if (optarg == NULL)
+			{
 
+				commandRunError(argv);
+			}
+			PORT = atoi(optarg);
+			break;
+		case 'r':
+			if (!optarg)
+			{
 
-					commandRunError(argv);
-				}
-				PORT = atoi(optarg);
-				break;
-			case 'r':
-				if (!optarg)
-				{
-
-					commandRunError(argv);
-				}
-				RATE_NUMBER_REQUESTS = atoi(optarg);
-				if (optind < argc && *argv[optind] != '-')
-				{
-					RATE_NUMBER_SECONDS = atoi(argv[optind]);
-					optind++;
-				}
-				else
-				{
-					commandRunError(argv);
-				}
-				break;
-			case 'm':
-				if (!optarg)
-				{
-					commandRunError(argv);
-				}
-				MAX_USERS = atoi(optarg);
-				break;
-			case 't':
-				if (!optarg)
-				{
-					commandRunError(argv);
-				}
-				TIME_OUT = atoi(optarg);
-				break;
+				commandRunError(argv);
+			}
+			RATE_NUMBER_REQUESTS = atoi(optarg);
+			if (optind < argc && *argv[optind] != '-')
+			{
+				RATE_NUMBER_SECONDS = atoi(argv[optind]);
+				optind++;
+			}
+			else
+			{
+				commandRunError(argv);
+			}
+			break;
+		case 'm':
+			if (!optarg)
+			{
+				commandRunError(argv);
+			}
+			MAX_USERS = atoi(optarg);
+			break;
+		case 't':
+			if (!optarg)
+			{
+				commandRunError(argv);
+			}
+			TIME_OUT = atoi(optarg);
+			break;
 		}
 	}
-
-	printf("%d %d %d %d %d\n", PORT, RATE_NUMBER_REQUESTS, RATE_NUMBER_SECONDS, MAX_USERS, TIME_OUT); /* TODO remove this. This is just for debugging. */
 
 	/* Create socket for incoming connections */
 	if ((servSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
@@ -178,7 +171,7 @@ int main(int argc, char *argv[])
 	echoServAddr.sin_port = htons(PORT);			  /* Local PORT */
 
 	/* Bind to the local address */
-	setsockopt(servSock,SOL_SOCKET,SO_REUSEADDR, &(int){1}, sizeof(int));
+	setsockopt(servSock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 	if (bind(servSock, (struct sockaddr *)&echoServAddr, sizeof(echoServAddr)) < 0)
 		DieWithError("bind() failed");
 
@@ -198,7 +191,8 @@ int main(int argc, char *argv[])
 
 		/* clntSock is connected to a client! */
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
+//		adminLog(echoClntAddr);
 		HandleTCPClient(clntSock, echoClntAddr);
 	}
 }
-	/* NOT REACHED */
+/* NOT REACHED */
