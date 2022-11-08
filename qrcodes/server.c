@@ -8,6 +8,8 @@
 #include <time.h>
 #include <stdbool.h>
 
+const int MAX_FILE_SIZE = 3000; /* Maximum of 3Kb according to http://qrcode.meetheed.com/question7.php  */
+
 // #define MAXPENDING 5             /* Maximum outstanding connection requests */
 void DieWithError(char *errorMessage)
 {
@@ -22,15 +24,19 @@ void commandRunError(char *argv[])
 void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 {
 	/* Receive the same string back from the server */
-	char buffer[32];
+	unsigned char buffer[MAX_FILE_SIZE];
 	int bytesRcvd;
 	int totalBytesRcvd = 0; /* Count of total bytes received     */
 	int bufferLen;
-	uint16_t stringSize;
+	long stringSize;
+	FILE *fptr;
+	int fileSize;
 
 	// Receiving size of string
-	if ((recv(clntSocket, &stringSize, sizeof(uint16_t), 0)) <= 0)
+	if ((recv(clntSocket, &stringSize, sizeof(long), 0)) <= 0)
 		DieWithError("Failed to receive string size. recv() failed or connection closed prematurely");
+
+	printf("File size is: %ld\n", stringSize);
 
 	printf("Received: "); /* Setup to print the echoed string */
 	while (totalBytesRcvd < stringSize)
@@ -43,18 +49,32 @@ void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 
 		totalBytesRcvd += bytesRcvd; /* Keep tally of total bytes */
 		buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
-		printf("%s", buffer); /* Print the echo buffer */
+		printf("%s", buffer);		 /* Print the echo buffer */
 	}
 	printf("\n");
 
-	// send(clntSocket, buffer, strlen(buffer), 0);
-	/* Send the string to the server */
-	if (send(clntSocket, buffer, stringSize, 0) != stringSize)
-		DieWithError("send() sent a different number of bytes than expected");
-	else
-		printf("Sent: %s\n", buffer);
+	fptr = fopen("server.png", "wb");
+	fwrite(buffer, 1, sizeof(buffer), fptr);
+	fclose(fptr);
 
-	// TODO: QR Code decoding here
+	// Decoding the qrcode
+	system("java -cp javase.jar:core.jar com.google.zxing.client.j2se.CommandLineRunner server.png | server.txt");
+
+	// Sending the decoded information back
+	fptr = fopen("server.txt", "rb");
+	// Getting size of contents in file
+	fseek(fptr, 0L, SEEK_END);
+	fileSize = ftell(fptr);
+	rewind(fptr);
+	// Getting contents in file
+	unsigned char *fileContents = malloc(sizeof(unsigned char) * fileSize);
+	fread(fileContents, ++fileSize, 1, fptr);
+	// Sending fileSize
+	if (send(clntSocket, &fileSize, sizeof(fileSize), 0) != sizeof(fileSize))
+		DieWithError("send() the size sent a different number of bytes than expected");
+	// Sending file content
+	if (send(clntSocket, fileContents, fileSize, 0) != fileSize)
+		DieWithError("send() the file sent a different number of bytes than expected");
 };				/* TCP client handling function */
 char *getTime() /* Gets the current time for logging. */
 {
@@ -100,7 +120,6 @@ int main(int argc, char *argv[])
 	unsigned short RATE_NUMBER_SECONDS = 60; /* Time limit for rate limit */
 	unsigned short MAX_USERS = 3;
 	unsigned short TIME_OUT = 80;
-	const int MAX_SIZE = 3000; /* Maximum of 3Kb according to http://qrcode.meetheed.com/question7.php  */
 
 	FILE *fPtr;
 	fPtr = fopen("log.txt", "w");
@@ -191,7 +210,7 @@ int main(int argc, char *argv[])
 
 		/* clntSock is connected to a client! */
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
-//		adminLog(echoClntAddr);
+		//		adminLog(echoClntAddr);
 		HandleTCPClient(clntSock, echoClntAddr);
 	}
 }
