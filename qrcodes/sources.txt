@@ -1,4 +1,0 @@
-These are the sources that we used while working on Project 1: Quick Response Codes
-
-https://secnet.cs.wpi.edu/vmdashboard/files.php
-https://beej.us/guide/bgnet/html/#bind

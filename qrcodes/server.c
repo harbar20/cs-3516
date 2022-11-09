@@ -61,6 +61,10 @@ void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 	// Decoding the qrcode
 	system("java -cp javase.jar:core.jar com.google.zxing.client.j2se.CommandLineRunner server.png > server.txt");
 
+	// Deleting server.png
+	if (remove("server.png") != 0)
+		DieWithError("Deleted server.png unsuccessfully.");
+
 	// Sending the decoded information back
 	fptr = fopen("server.txt", "r");
 	// Getting size of contents in file
@@ -70,6 +74,9 @@ void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 	// Getting contents in file
 	fileContents = malloc(sizeof(char) * serverFileSize);
 	fread(fileContents, 1, serverFileSize, fptr);
+	// Deleting server.txt
+	if (remove("server.txt") != 0)
+		DieWithError("Deleted server.txt unsuccessfully.");
 
 	// Sending return code
 	returnCode = 0;
