@@ -44,8 +44,8 @@ void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 		/* Receive up to the buffer size (minus 1 to leave space for
 		   a null terminator) bytes from the sender */
 		bufferLen = strlen(buffer) - 1;
-		if ((bytesRcvd = recv(clntSocket, buffer, bufferLen, 0)) <= 0)
-			DieWithError("recv() failed or connection closed prematurely");
+		if ((bytesRcvd = recv(clntSocket, buffer, stringSize-totalBytesRcvd, 0)) <= 0)
+			DieWithError("Failed to receive image. recv() failed or connection closed prematurely");
 
 		totalBytesRcvd += bytesRcvd; /* Keep tally of total bytes */
 		buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
@@ -58,48 +58,55 @@ void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 	fclose(fptr);
 
 	// Decoding the qrcode
-	system("java -cp javase.jar:core.jar com.google.zxing.client.j2se.CommandLineRunner server.png | server.txt");
+	system("java -cp javase.jar:core.jar com.google.zxing.client.j2se.CommandLineRunner server.png > server.txt");
 
 	// Sending the decoded information back
-	fptr = fopen("server.txt", "rb");
+	fptr = fopen("server.txt", "r");
 	// Getting size of contents in file
 	fseek(fptr, 0L, SEEK_END);
 	fileSize = ftell(fptr);
 	rewind(fptr);
 	// Getting contents in file
-	unsigned char *fileContents = malloc(sizeof(unsigned char) * fileSize);
-	fread(fileContents, ++fileSize, 1, fptr);
+	char *fileContents = malloc(sizeof(char) * fileSize);
+	fread(fileContents, 1, fileSize, fptr);
+	// Sending return code
+	int returnCode = 0;
+	if (send(clntSocket, &returnCode, sizeof(returnCode), 0) != sizeof(returnCode))
+		DieWithError("send() for the return code sent a different number of bytes than expected.");
+	printf("Return code to send: %d\n", returnCode);
 	// Sending fileSize
 	if (send(clntSocket, &fileSize, sizeof(fileSize), 0) != sizeof(fileSize))
-		DieWithError("send() the size sent a different number of bytes than expected");
+		DieWithError("send() for the size sent a different number of bytes than expected");
+	printf("Return size to send: %d\n", fileSize);
 	// Sending file content
 	if (send(clntSocket, fileContents, fileSize, 0) != fileSize)
-		DieWithError("send() the file sent a different number of bytes than expected");
+		DieWithError("send() for the file sent a different number of bytes than expected");
+	printf("File contents to send: %s\n", fileContents);
+
+	free(fileContents);
+	fclose(fptr);
 };				/* TCP client handling function */
-char *getTime() /* Gets the current time for logging. */
+void getTime(char* outTime) /* Gets the current time for logging. */
 {
 	time_t timeNull = time(NULL);
 	struct tm *t = localtime(&timeNull);
-
-	char *finalTime;
-	snprintf(finalTime, 19, "%d-%d-%d %d:%d:%d", t->tm_year + 1900, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
-
-	// return ctime(&t);
-	return finalTime;
+	snprintf(outTime, 19, "%d-%d-%d %d:%d:%d", t->tm_year + 1900, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+	printf("%s\n",outTime);
 }
 
 void adminLog(struct sockaddr_in echoClntAddr)
 {
+	char finalTime[100];
 	printf("Initializing fptr\n");
 	FILE *f;
 	printf("Initialized fptr\n");
 	f = fopen("log.txt", "a");
 	printf("Opened fptr\n");
-	char *time = getTime();
+	getTime(finalTime);
 	printf("Got time\n");
 	char *ip = inet_ntoa(echoClntAddr.sin_addr);
 	printf("Got IP\n");
-	fprintf(f, "%s %s", time, ip);
+	fprintf(f, "%s %s", finalTime, ip);
 	printf("Printed to fptr\n");
 	fclose(f);
 	printf("Closed fptr\n");
@@ -124,6 +131,7 @@ int main(int argc, char *argv[])
 	FILE *fPtr;
 	fPtr = fopen("log.txt", "w");
 	fputs("Server intializing...\n", fPtr);
+	fclose(fPtr);
 
 	unsigned int clntLen; /* Length of client address data structure */
 
@@ -137,51 +145,52 @@ int main(int argc, char *argv[])
 	{
 		switch (option)
 		{
-		case 'p':
-			if (optarg == NULL)
-			{
+			case 'p':
+				if (optarg == NULL)
+				{
 
-				commandRunError(argv);
-			}
-			PORT = atoi(optarg);
-			break;
-		case 'r':
-			if (!optarg)
-			{
+					commandRunError(argv);
+				}
+				PORT = atoi(optarg);
+				break;
+			case 'r':
+				if (!optarg)
+				{
 
-				commandRunError(argv);
-			}
-			RATE_NUMBER_REQUESTS = atoi(optarg);
-			if (optind < argc && *argv[optind] != '-')
-			{
-				RATE_NUMBER_SECONDS = atoi(argv[optind]);
-				optind++;
-			}
-			else
-			{
-				commandRunError(argv);
-			}
-			break;
-		case 'm':
-			if (!optarg)
-			{
-				commandRunError(argv);
-			}
-			MAX_USERS = atoi(optarg);
-			break;
-		case 't':
-			if (!optarg)
-			{
-				commandRunError(argv);
-			}
-			TIME_OUT = atoi(optarg);
-			break;
+					commandRunError(argv);
+				}
+				RATE_NUMBER_REQUESTS = atoi(optarg);
+				if (optind < argc && *argv[optind] != '-')
+				{
+					RATE_NUMBER_SECONDS = atoi(argv[optind]);
+					optind++;
+				}
+				else
+				{
+					commandRunError(argv);
+				}
+				break;
+			case 'm':
+				if (!optarg)
+				{
+					commandRunError(argv);
+				}
+				MAX_USERS = atoi(optarg);
+				break;
+			case 't':
+				if (!optarg)
+				{
+					commandRunError(argv);
+				}
+				TIME_OUT = atoi(optarg);
+				break;
 		}
 	}
 
 	/* Create socket for incoming connections */
 	if ((servSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 		DieWithError("socket() failed");
+	adminLog(echoClntAddr);
 
 	/* Construct local address structure */
 	memset(&echoServAddr, 0, sizeof(echoServAddr));	  /* Zero out structure */
@@ -198,9 +207,6 @@ int main(int argc, char *argv[])
 	if (listen(servSock, MAX_USERS) < 0)
 		DieWithError("listen() failed");
 
-	fputs("Server intialized\n", fPtr);
-	fclose(fPtr);
-
 	for (;;) /* Run forever */
 	{
 		/* Set the size of the in-out parameter */
@@ -210,7 +216,7 @@ int main(int argc, char *argv[])
 
 		/* clntSock is connected to a client! */
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
-		//		adminLog(echoClntAddr);
+		adminLog(echoClntAddr);
 		HandleTCPClient(clntSock, echoClntAddr);
 	}
 }
