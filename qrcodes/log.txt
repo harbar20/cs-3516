@@ -1,2 +1,18 @@
 Server intializing...
-2022-10-9 0:8:41 0.0.0.02022-10-9 0:8:47 127.0.0.1
+2022-10-9 23:35:41 59.127.0.0 Client socket created.
+2022-10-9 23:35:41 59.127.0.0 Client bind successful.
+2022-10-9 23:35:41 59.127.0.0 Client listen...
+2022-10-9 23:36:7 127.0.0.1 Client socket accepted.
+2022-10-9 23:36:7 127.0.0.1 Client handling...
+2022-10-9 23:36:7 127.0.0.1 Client socket accepted.
+2022-10-9 23:36:7 127.0.0.1 Client handling...
+2022-10-9 23:36:7 127.0.0.1 Received size of file from client.
+2022-10-9 23:36:7 127.0.0.1 Received file contents from client.
+2022-10-9 23:36:7 127.0.0.1 Saved file contents from client.
+2022-10-9 23:36:8 127.0.0.1 Decoded file contents from client.
+2022-10-9 23:36:8 127.0.0.1 Deleted saved file contents from client.
+2022-10-9 23:36:8 127.0.0.1 Read results of decoded file contents from client.
+2022-10-9 23:36:8 127.0.0.1 Deleted results of decoded file contents from client.
+2022-10-9 23:36:8 127.0.0.1 Sent return code to client.
+2022-10-9 23:36:8 127.0.0.1 Sent decoded contents size to client.
+2022-10-9 23:36:8 127.0.0.1 Sent decoded contents to client.

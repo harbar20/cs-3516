@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	int bytesRcvd, totalBytesRcvd; /* Bytes read in single recv() and total bytes read */
 	long fileSize;
 	char *fileName;
-	char *buffer;
+	char buffer = 0;
 	int returnCode, returnSize;
 
 	if ((argc < 3) || (argc > 4)) /* Test for correct number of arguments */
@@ -85,13 +85,14 @@ int main(int argc, char *argv[])
 	{
 		/* Receive up to the buffer size (minus 1 to leave space for
 		   a null terminator) bytes from the sender */
-		if ((bytesRcvd = recv(sock, buffer, returnSize - totalBytesRcvd, 0)) <= 0)
+		if ((bytesRcvd = recv(sock, &buffer, 1, 0)) <= 0)
 		{
+			printf("Error code: %d\n", bytesRcvd);
 			DieWithError("recv() failed or connection closed prematurely");
 		}
 		totalBytesRcvd += bytesRcvd; /* Keep tally of total bytes */
-		buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
-		printf("%s", buffer);		 /* Print the echo buffer */
+		// buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
+		printf("%c", buffer);		 /* Print the echo buffer */
 	}
 	/* send string to be displayed*/
 
