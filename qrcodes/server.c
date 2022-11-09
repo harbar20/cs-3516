@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
 		args.sock = clntSock;
 		args.address = clntAddr;
 		pthread_create(&pt, NULL, &HandleTCPClient, &args);
-		//pthread_join(pt);
+		pthread_join(pt, NULL);
 		// HandleTCPClient(clntSock, clntAddr);
 		// adminLog(clntAddr, "Client handle successful.");
 	}
