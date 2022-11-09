@@ -18,12 +18,12 @@ int main(int argc, char *argv[])
 	struct sockaddr_in servAddr;   /* Echo server address */
 	unsigned short servPort;	   /* Echo server port */
 	char *servIP;				   /* Server IP address (dotted quad) */
-	char *echoString;			   /* String to send to echo server */
-	char echoBuffer[RCVBUFSIZE];   /* Buffer for echo string */
 	unsigned int echoStringLen;	   /* Length of string to echo */
 	int bytesRcvd, totalBytesRcvd; /* Bytes read in single recv() and total bytes read */
 	long fileSize;
 	char *fileName;
+	char *buffer;
+	int returnCode, returnSize;
 
 	if ((argc < 3) || (argc > 4)) /* Test for correct number of arguments */
 	{
@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
 	if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 	{
 		DieWithError("socket() failed");
-		exit(1);
 	}
 	/* Construct the server address structure */
 	memset(&servAddr, 0, sizeof(servAddr));		  /* Zero out structure */
@@ -73,20 +72,14 @@ int main(int argc, char *argv[])
 	free(fileContents);
 
 	// Receiving return code
-	int returnCode;
 	if ((recv(sock, &returnCode, sizeof(int), 0)) <= 0)
 		DieWithError("Failed to receive return code. recv() failed or connection closed prematurely");
 
-	printf("Return code: %d\n", returnCode);
 	// Receiving size of string
-	int returnSize;
 	if ((recv(sock, &returnSize, sizeof(int), 0)) <= 0)
 		DieWithError("Failed to receive return size. recv() failed or connection closed prematurely");
 
-	printf("Return size: %d\n", returnSize);
-
-	totalBytesRcvd = 0;	  /* Count of total bytes received     */
-	char *buffer;
+	totalBytesRcvd = 0; /* Count of total bytes received     */
 	printf("Received: "); /* Setup to print the echoed string */
 	while (totalBytesRcvd < returnSize)
 	{
@@ -95,11 +88,10 @@ int main(int argc, char *argv[])
 		if ((bytesRcvd = recv(sock, buffer, returnSize - totalBytesRcvd, 0)) <= 0)
 		{
 			DieWithError("recv() failed or connection closed prematurely");
-			exit(1);
 		}
-		totalBytesRcvd += bytesRcvd;  /* Keep tally of total bytes */
-		buffer[bytesRcvd] = '\0'; /* Terminate the string! */
-		printf("%s", buffer);	  /* Print the echo buffer */
+		totalBytesRcvd += bytesRcvd; /* Keep tally of total bytes */
+		buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
+		printf("%s", buffer);		 /* Print the echo buffer */
 	}
 	/* send string to be displayed*/
 

@@ -23,36 +23,37 @@ void commandRunError(char *argv[])
 }
 void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 {
-	/* Receive the same string back from the server */
+	// Buffer for receiving the file
 	unsigned char buffer[MAX_FILE_SIZE];
+	// Track how many bytes of the file have been received witin the loop
 	int bytesRcvd;
-	int totalBytesRcvd = 0; /* Count of total bytes received     */
-	int bufferLen;
-	long stringSize;
+	// Total bytes received of the file
+	int totalBytesRcvd = 0;
+	// Size of the file sent by the client
+	long clientFileSize;
+	// File pointer for general use
 	FILE *fptr;
-	int fileSize;
+	// Size of the text sent by the server
+	int serverFileSize;
+	// Text sent by the server
+	char *fileContents;
+	// Return code sent by the server
+	int returnCode;
 
 	// Receiving size of string
-	if ((recv(clntSocket, &stringSize, sizeof(long), 0)) <= 0)
+	if ((recv(clntSocket, &clientFileSize, sizeof(long), 0)) <= 0)
 		DieWithError("Failed to receive string size. recv() failed or connection closed prematurely");
 
-	printf("File size is: %ld\n", stringSize);
-
-	printf("Received: "); /* Setup to print the echoed string */
-	while (totalBytesRcvd < stringSize)
+	while (totalBytesRcvd < clientFileSize)
 	{
-		/* Receive up to the buffer size (minus 1 to leave space for
-		   a null terminator) bytes from the sender */
-		bufferLen = strlen(buffer) - 1;
-		if ((bytesRcvd = recv(clntSocket, buffer, stringSize-totalBytesRcvd, 0)) <= 0)
+		if ((bytesRcvd = recv(clntSocket, buffer, clientFileSize - totalBytesRcvd, 0)) <= 0)
 			DieWithError("Failed to receive image. recv() failed or connection closed prematurely");
 
 		totalBytesRcvd += bytesRcvd; /* Keep tally of total bytes */
 		buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
-		printf("%s", buffer);		 /* Print the echo buffer */
 	}
-	printf("\n");
 
+	// Saving sent bytes to a file to be read later
 	fptr = fopen("server.png", "wb");
 	fwrite(buffer, 1, sizeof(buffer), fptr);
 	fclose(fptr);
@@ -64,52 +65,43 @@ void HandleTCPClient(int clntSocket, struct sockaddr_in clntAddr)
 	fptr = fopen("server.txt", "r");
 	// Getting size of contents in file
 	fseek(fptr, 0L, SEEK_END);
-	fileSize = ftell(fptr);
+	serverFileSize = ftell(fptr);
 	rewind(fptr);
 	// Getting contents in file
-	char *fileContents = malloc(sizeof(char) * fileSize);
-	fread(fileContents, 1, fileSize, fptr);
+	fileContents = malloc(sizeof(char) * serverFileSize);
+	fread(fileContents, 1, serverFileSize, fptr);
+
 	// Sending return code
-	int returnCode = 0;
+	returnCode = 0;
 	if (send(clntSocket, &returnCode, sizeof(returnCode), 0) != sizeof(returnCode))
 		DieWithError("send() for the return code sent a different number of bytes than expected.");
-	printf("Return code to send: %d\n", returnCode);
-	// Sending fileSize
-	if (send(clntSocket, &fileSize, sizeof(fileSize), 0) != sizeof(fileSize))
+	// Sending serverFileSize
+	if (send(clntSocket, &serverFileSize, sizeof(serverFileSize), 0) != sizeof(serverFileSize))
 		DieWithError("send() for the size sent a different number of bytes than expected");
-	printf("Return size to send: %d\n", fileSize);
 	// Sending file content
-	if (send(clntSocket, fileContents, fileSize, 0) != fileSize)
+	if (send(clntSocket, fileContents, serverFileSize, 0) != serverFileSize)
 		DieWithError("send() for the file sent a different number of bytes than expected");
-	printf("File contents to send: %s\n", fileContents);
 
 	free(fileContents);
 	fclose(fptr);
-};				/* TCP client handling function */
-void getTime(char* outTime) /* Gets the current time for logging. */
+};							/* TCP client handling function */
+void getTime(char *outTime) /* Gets the current time for logging. */
 {
 	time_t timeNull = time(NULL);
 	struct tm *t = localtime(&timeNull);
 	snprintf(outTime, 19, "%d-%d-%d %d:%d:%d", t->tm_year + 1900, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
-	printf("%s\n",outTime);
+	printf("%s\n", outTime);
 }
 
-void adminLog(struct sockaddr_in echoClntAddr)
+void adminLog(struct sockaddr_in echoClntAddr, char *text)
 {
 	char finalTime[100];
-	printf("Initializing fptr\n");
 	FILE *f;
-	printf("Initialized fptr\n");
 	f = fopen("log.txt", "a");
-	printf("Opened fptr\n");
 	getTime(finalTime);
-	printf("Got time\n");
 	char *ip = inet_ntoa(echoClntAddr.sin_addr);
-	printf("Got IP\n");
-	fprintf(f, "%s %s", finalTime, ip);
-	printf("Printed to fptr\n");
+	fprintf(f, "%s %s %s", finalTime, ip, text);
 	fclose(f);
-	printf("Closed fptr\n");
 }
 
 int main(int argc, char *argv[])
@@ -145,52 +137,52 @@ int main(int argc, char *argv[])
 	{
 		switch (option)
 		{
-			case 'p':
-				if (optarg == NULL)
-				{
+		case 'p':
+			if (optarg == NULL)
+			{
 
-					commandRunError(argv);
-				}
-				PORT = atoi(optarg);
-				break;
-			case 'r':
-				if (!optarg)
-				{
+				commandRunError(argv);
+			}
+			PORT = atoi(optarg);
+			break;
+		case 'r':
+			if (!optarg)
+			{
 
-					commandRunError(argv);
-				}
-				RATE_NUMBER_REQUESTS = atoi(optarg);
-				if (optind < argc && *argv[optind] != '-')
-				{
-					RATE_NUMBER_SECONDS = atoi(argv[optind]);
-					optind++;
-				}
-				else
-				{
-					commandRunError(argv);
-				}
-				break;
-			case 'm':
-				if (!optarg)
-				{
-					commandRunError(argv);
-				}
-				MAX_USERS = atoi(optarg);
-				break;
-			case 't':
-				if (!optarg)
-				{
-					commandRunError(argv);
-				}
-				TIME_OUT = atoi(optarg);
-				break;
+				commandRunError(argv);
+			}
+			RATE_NUMBER_REQUESTS = atoi(optarg);
+			if (optind < argc && *argv[optind] != '-')
+			{
+				RATE_NUMBER_SECONDS = atoi(argv[optind]);
+				optind++;
+			}
+			else
+			{
+				commandRunError(argv);
+			}
+			break;
+		case 'm':
+			if (!optarg)
+			{
+				commandRunError(argv);
+			}
+			MAX_USERS = atoi(optarg);
+			break;
+		case 't':
+			if (!optarg)
+			{
+				commandRunError(argv);
+			}
+			TIME_OUT = atoi(optarg);
+			break;
 		}
 	}
 
 	/* Create socket for incoming connections */
 	if ((servSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 		DieWithError("socket() failed");
-	adminLog(echoClntAddr);
+	adminLog(echoClntAddr, "Client socket created.");
 
 	/* Construct local address structure */
 	memset(&echoServAddr, 0, sizeof(echoServAddr));	  /* Zero out structure */
@@ -202,10 +194,12 @@ int main(int argc, char *argv[])
 	setsockopt(servSock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 	if (bind(servSock, (struct sockaddr *)&echoServAddr, sizeof(echoServAddr)) < 0)
 		DieWithError("bind() failed");
+	adminLog(echoClntAddr, "Client bind successful.");
 
 	/* Mark the socket so it will listen for incoming connections */
 	if (listen(servSock, MAX_USERS) < 0)
 		DieWithError("listen() failed");
+	adminLog(echoClntAddr, "Client listen...");
 
 	for (;;) /* Run forever */
 	{
@@ -213,11 +207,13 @@ int main(int argc, char *argv[])
 		clntLen = sizeof(echoClntAddr); /* Wait for a client to connect */
 		if ((clntSock = accept(servSock, (struct sockaddr *)&echoClntAddr, &clntLen)) < 0)
 			DieWithError("accept() failed");
+		adminLog(echoClntAddr, "Client socket accepted.");
 
 		/* clntSock is connected to a client! */
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
-		adminLog(echoClntAddr);
+		adminLog(echoClntAddr, "Client handling...");
 		HandleTCPClient(clntSock, echoClntAddr);
+		adminLog(echoClntAddr, "Client handle successful.");
 	}
 }
 /* NOT REACHED */
