@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	if ((recv(sock, &returnSize, sizeof(int), 0)) <= 0)
 		DieWithError("Failed to receive return size. recv() failed or connection closed prematurely");
 
-	totalBytesRcvd = 0; /* Count of total bytes received     */
+	totalBytesRcvd = 0;	  /* Count of total bytes received     */
 	printf("Received: "); /* Setup to print the echoed string */
 	while (totalBytesRcvd < returnSize)
 	{
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 		}
 		totalBytesRcvd += bytesRcvd; /* Keep tally of total bytes */
 		// buffer[bytesRcvd] = '\0';	 /* Terminate the string! */
-		printf("%c", buffer);		 /* Print the echo buffer */
+		printf("%c", buffer); /* Print the echo buffer */
 	}
 	/* send string to be displayed*/
 

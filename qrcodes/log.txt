@@ -1,28 +1,29 @@
 Server intializing...
-2022-10-9 23:48:47 147.127.0.0 Client socket created.
-2022-10-9 23:48:47 147.127.0.0 Client bind successful.
-2022-10-9 23:48:47 147.127.0.0 Client listen...
-2022-10-9 23:48:56 10.63.21.2 Client socket accepted.
-2022-10-9 23:48:56 10.63.21.2 Client handling...
-2022-10-9 23:48:56 10.63.21.2 Received size of file from client.
-2022-10-9 23:48:56 10.63.21.2 Received file contents from client.
-2022-10-9 23:48:56 10.63.21.2 Saved file contents from client.
-2022-10-9 23:48:57 10.63.21.2 Decoded file contents from client.
-2022-10-9 23:48:57 10.63.21.2 Deleted saved file contents from client.
-2022-10-9 23:48:57 10.63.21.2 Read results of decoded file contents from client.
-2022-10-9 23:48:57 10.63.21.2 Deleted results of decoded file contents from client.
-2022-10-9 23:48:57 10.63.21.2 Sent return code to client.
-2022-10-9 23:48:57 10.63.21.2 Sent decoded contents size to client.
-2022-10-9 23:48:57 10.63.21.2 Sent decoded contents to client.
-2022-10-9 23:49:2 127.0.0.1 Client socket accepted.
-2022-10-9 23:49:2 127.0.0.1 Client handling...
-2022-10-9 23:49:2 127.0.0.1 Received size of file from client.
-2022-10-9 23:49:2 127.0.0.1 Received file contents from client.
-2022-10-9 23:49:2 127.0.0.1 Saved file contents from client.
-2022-10-9 23:49:2 127.0.0.1 Decoded file contents from client.
-2022-10-9 23:49:2 127.0.0.1 Deleted saved file contents from client.
-2022-10-9 23:49:2 127.0.0.1 Read results of decoded file contents from client.
-2022-10-9 23:49:2 127.0.0.1 Deleted results of decoded file contents from client.
-2022-10-9 23:49:2 127.0.0.1 Sent return code to client.
-2022-10-9 23:49:2 127.0.0.1 Sent decoded contents size to client.
-2022-10-9 23:49:2 127.0.0.1 Sent decoded contents to client.
+2022-10-11  2:34:21 166.127.0.0 Socket created. 0
+2022-10-11  2:34:21 166.127.0.0 Bind successful. 0
+2022-10-11  2:34:21 166.127.0.0 Listening... 0
+2022-10-11  2:34:48 10.63.21.1 Client socket accepted. 3
+2022-10-11  2:34:48 10.63.21.1 Client handling... 3
+2022-10-11  2:34:48 10.63.21.1 Received size of file from client. 2
+2022-10-11  2:34:48 10.63.21.1 Received file contents from client. 2
+2022-10-11  2:34:48 10.63.21.1 Saved file contents from client. 2
+2022-10-11  2:34:49 10.63.21.1 Decoded file contents from client. 2
+2022-10-11  2:34:49 10.63.21.1 Deleted saved file contents from client. 2
+2022-10-11  2:34:49 10.63.21.1 Read results of decoded file contents from client. 2
+2022-10-11  2:34:49 10.63.21.1 Deleted results of decoded file contents from client. 2
+2022-10-11  2:34:49 10.63.21.1 Sent return code to client. 2
+2022-10-11  2:34:49 10.63.21.1 Sent decoded contents size to client. 2
+2022-10-11  2:34:49 10.63.21.1 Sent decoded contents to client. 2
+2022-10-11  2:35:45 10.63.21.1 Client socket accepted. 3
+2022-10-11  2:35:45 10.63.21.1 Client handling... 3
+2022-10-11  2:35:45 10.63.21.1 Received size of file from client. 2
+2022-10-11  2:35:45 10.63.21.1 Received file contents from client. 2
+2022-10-11  2:35:45 10.63.21.1 Saved file contents from client. 2
+2022-10-11  2:35:46 10.63.21.1 Decoded file contents from client. 2
+2022-10-11  2:35:46 10.63.21.1 Deleted saved file contents from client. 2
+2022-10-11  2:35:46 10.63.21.1 Read results of decoded file contents from client. 2
+2022-10-11  2:35:46 10.63.21.1 Deleted results of decoded file contents from client. 2
+2022-10-11  2:35:46 10.63.21.1 Sent return code to client. 2
+2022-10-11  2:35:46 10.63.21.1 Sent decoded contents size to client. 2
+2022-10-11  2:35:46 10.63.21.1 Sent decoded contents to client. 2
+Server timed out. Signum: 14
