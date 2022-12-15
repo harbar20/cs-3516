@@ -445,7 +445,7 @@ int main(int argc, char **argv)
                         // ID of next hop node
                         int nextHopID = nodes.at(nextHopIP);
                         // Applying delay for next hop
-                        sleep(delays.at(nextHopID));
+                        sleep((float) delays.at(nextHopID)/1000);
 
                         // Forwarding packet to nextHop
                         if (cs3516_send(sock, tempP, sizeof(struct packet), inet_addr(nextHopIP.c_str())) <= 0)
