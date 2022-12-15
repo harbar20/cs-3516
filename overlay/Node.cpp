@@ -367,7 +367,7 @@ int main(int argc, char **argv)
     // creating socket
     int sock = create_cs3516_socket();
     // Setting up time for select
-    struct timeval tv;
+    struct timeval tv; // TODO: figure out what this is supposed to be
     tv.tv_usec = 10000;
     tv.tv_sec = 1;
 
