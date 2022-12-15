@@ -1,7 +1,8 @@
 node: Node.cpp
-	g++ -o node Node.cpp
+	g++ -g -o node Node.cpp
 all: Node.cpp
 	g++ -o node Node.cpp
-
-clean: node
-	rm -f node
+clean: Node
+	rm node
+testparse: testparse.cpp
+	g++ -o testparse testparse.cpp
