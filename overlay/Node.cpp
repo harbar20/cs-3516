@@ -306,7 +306,6 @@ void sendPacket(int sock, char *buffer, char *ipAddress)
 
     // Building the data of the packet
     string data = to_string(rand());
-    // TODO: make data read from file instead of generating a random number
 
     // Building the final packet
     struct packet p;
@@ -366,10 +365,6 @@ int main(int argc, char **argv)
     parseConfig(fileName, nodeType, nodeID);
     // creating socket
     int sock = create_cs3516_socket();
-    // Setting up time for select
-    struct timeval tv; // TODO: figure out what this is supposed to be
-    tv.tv_usec = 10000;
-    tv.tv_sec = 1;
 
     // This node is a router
     if (nodeType == 1)
@@ -386,7 +381,7 @@ int main(int argc, char **argv)
             fd_set rfds;
             FD_ZERO(&rfds);
             FD_SET(sock, &rfds);
-            int recVal = select(sock + 1, &rfds, NULL, NULL, &tv);
+            int recVal = select(sock + 1, &rfds, NULL, NULL, NULL);
 
             // Checking the constantly-changing return value of the select function
             switch (recVal)
@@ -491,7 +486,6 @@ int main(int argc, char **argv)
     else if (nodeType == 2)
     {
         char buffer[bufferlen];
-        // TODO: figure out who the host is supposed to send to?
         sleep(.01);
         sendPacket(sock, buffer, argv[1]);
 
